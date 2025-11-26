@@ -195,29 +195,132 @@ fn main() {
 `;
   }
 
+  // Language support
+  public currentLanguage: string = 'rust';
+
+  private syntaxRules: Record<string, {
+    comments: string[];
+    macros: string[];
+    keywords: string[];
+    strings: string[];
+  }> = {
+    rust: {
+      comments: ['//'],
+      macros: ['#[', 'println!', 'format!', 'vec!'],
+      keywords: ['fn ', 'struct ', 'enum ', 'impl ', 'let ', 'use ', 'match ', 'pub ', 'mod ', 'crate ', 'super ', 'self ', 'Self ', 'where ', 'move ', 'async ', 'await '],
+      strings: ['"']
+    },
+    typescript: {
+      comments: ['//', '/*'],
+      macros: ['@', 'console.'],
+      keywords: ['const ', 'let ', 'var ', 'function ', 'class ', 'interface ', 'type ', 'import ', 'export ', 'from ', 'return ', 'if ', 'else ', 'switch ', 'case ', 'default ', 'break ', 'continue ', 'try ', 'catch ', 'finally ', 'async ', 'await ', 'new ', 'this ', 'extends ', 'implements '],
+      strings: ['"', "'", '`']
+    },
+    python: {
+      comments: ['#'],
+      macros: ['@'],
+      keywords: ['def ', 'class ', 'import ', 'from ', 'return ', 'if ', 'elif ', 'else ', 'while ', 'for ', 'in ', 'try ', 'except ', 'finally ', 'with ', 'as ', 'pass ', 'break ', 'continue ', 'lambda ', 'yield ', 'async ', 'await '],
+      strings: ['"', "'"]
+    },
+    cpp: {
+      comments: ['//', '/*'],
+      macros: ['#include', '#define', '#ifdef', '#endif', 'std::'],
+      keywords: ['void ', 'int ', 'float ', 'double ', 'char ', 'bool ', 'class ', 'struct ', 'public:', 'private:', 'protected:', 'virtual ', 'override', 'return ', 'if ', 'else ', 'for ', 'while ', 'do ', 'switch ', 'case ', 'break ', 'continue ', 'new ', 'delete ', 'using ', 'namespace ', 'template ', 'typename '],
+      strings: ['"']
+    },
+    html: {
+      comments: ['<!--'],
+      macros: ['<!DOCTYPE'],
+      keywords: ['<html', '<head', '<body', '<div', '<span', '<p', '<a', '<img', '<script', '<style', '<link', '<meta', '<title', '<button', '<input', '<form', '<ul', '<li', '<table', '<tr', '<td', '<th', '</'],
+      strings: ['"', "'"]
+    },
+    css: {
+      comments: ['/*'],
+      macros: ['@import', '@media', '@keyframes', '@font-face'],
+      keywords: ['body', 'div', 'span', 'p', '.', '#', 'color:', 'background:', 'margin:', 'padding:', 'width:', 'height:', 'display:', 'position:', 'top:', 'left:', 'right:', 'bottom:', 'font-', 'border:', 'flex', 'grid'],
+      strings: ['"', "'"]
+    },
+    java: {
+      comments: ['//', '/*'],
+      macros: ['@Override', '@Deprecated', 'System.out'],
+      keywords: ['public ', 'private ', 'protected ', 'class ', 'interface ', 'extends ', 'implements ', 'void ', 'int ', 'boolean ', 'String ', 'return ', 'if ', 'else ', 'for ', 'while ', 'try ', 'catch ', 'finally ', 'new ', 'this ', 'super ', 'package ', 'import ', 'static ', 'final '],
+      strings: ['"']
+    },
+    go: {
+      comments: ['//', '/*'],
+      macros: ['fmt.'],
+      keywords: ['func ', 'package ', 'import ', 'type ', 'struct ', 'interface ', 'return ', 'if ', 'else ', 'for ', 'range ', 'switch ', 'case ', 'default ', 'go ', 'defer ', 'chan ', 'map ', 'var ', 'const '],
+      strings: ['"', '`']
+    }
+  };
+
   // Simplified syntax coloring
   private getLineColor(line: string): number[] {
     const trimmed = line.trim();
-    if (trimmed.startsWith("//")) {
+    const rules = this.syntaxRules[this.currentLanguage] || this.syntaxRules['rust'];
+
+    // Check comments
+    if (rules.comments.some(c => trimmed.startsWith(c))) {
       return this.commentColor;
-    } else if (trimmed.startsWith("#[")) {
+    }
+    
+    // Check macros/decorators
+    if (rules.macros.some(m => trimmed.startsWith(m) || trimmed.includes(m))) {
       return this.macroColor;
-    } else if (trimmed.includes("println!") || trimmed.includes("format!")) {
-      return this.macroColor;
-    } else if (line.includes('"')) {
+    }
+
+    // Check strings
+    if (rules.strings.some(s => line.includes(s))) {
       return this.stringColor;
-    } else if (
-      trimmed.startsWith("fn ") ||
-      trimmed.startsWith("struct ") ||
-      trimmed.startsWith("enum ") ||
-      trimmed.startsWith("impl ") ||
-      trimmed.startsWith("let ") ||
-      trimmed.startsWith("use ") ||
-      trimmed.startsWith("match ")
-    ) {
+    }
+
+    // Check keywords
+    if (rules.keywords.some(k => trimmed.startsWith(k))) {
       return this.keywordColor;
     }
+
     return this.defaultColor;
+  }
+
+  public updateCode(newCode: string): void {
+    this.rustCode = newCode;
+  }
+
+  public getCode(): string {
+    return this.rustCode;
+  }
+
+  public setLanguage(language: string): void {
+    if (this.syntaxRules[language]) {
+      this.currentLanguage = language;
+    }
+  }
+
+  public updateConfig(config: {
+    fontSize?: number;
+    lineHeight?: number;
+    lineStartX?: number;
+    lineStartY?: number;
+    canvasHeight?: number;
+    language?: string;
+  }): void {
+    if (config.fontSize !== undefined) this.fontSize = config.fontSize;
+    if (config.lineHeight !== undefined) this.lineHeight = config.lineHeight;
+    if (config.lineStartX !== undefined) this.lineStartX = config.lineStartX;
+    if (config.lineStartY !== undefined) this.lineStartY = config.lineStartY;
+    if (config.canvasHeight !== undefined) this.canvasHeight = config.canvasHeight;
+    if (config.language !== undefined) this.setLanguage(config.language);
+  }
+
+  public getConfig() {
+    return {
+      fontSize: this.fontSize,
+      lineHeight: this.lineHeight,
+      lineStartX: this.lineStartX,
+      lineStartY: this.lineStartY,
+      canvasHeight: this.canvasHeight,
+      language: this.currentLanguage,
+    };
   }
 
   protected implementDrawing(
@@ -260,7 +363,7 @@ fn main() {
     context.textSize(this.fontSize);
     context.push(); // Save current state
     // Since textFont is not in the DrawingContext interface, use p5 directly
-    this.p5.textFont("monospace");
+    this.p5.textFont("JetBrains Mono");
 
     // 背景は描画しない
     context.noStroke();

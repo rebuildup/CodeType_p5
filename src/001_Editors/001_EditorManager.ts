@@ -209,4 +209,15 @@ export class EditorManager {
   public getFPS(): number {
     return this.fps;
   }
+
+  public setFPS(fps: number): void {
+    this.fps = fps;
+  }
+
+  public setFrameCount(count: number): void {
+    this.frameCount = count;
+    if (this.currentFrame >= this.frameCount) {
+      this.currentFrame = 0;
+    }
+  }
 }

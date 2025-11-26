@@ -30,20 +30,46 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     let isResourceLoading = true;
     let resourceLoadProgress = 0;
 
-    function resizeCanvas() {
-      const margin = 16;
-      const availableWidth = window.innerWidth - margin * 2;
-      const availableHeight = window.innerHeight - margin * 2;
-      let targetWidth = availableWidth;
-      let targetHeight = targetWidth / ASPECT_RATIO;
-      if (targetHeight > availableHeight) {
-        targetHeight = availableHeight;
-        targetWidth = targetHeight * ASPECT_RATIO;
+    function resizeCanvas(width?: number, height?: number) {
+      let targetWidth, targetHeight;
+
+      if (width && height) {
+        targetWidth = width;
+        targetHeight = height;
+        // Update global config if needed, or just local canvas
+      } else {
+        const margin = 16;
+        const availableWidth = window.innerWidth - margin * 2;
+        const availableHeight = window.innerHeight - margin * 2;
+        targetWidth = availableWidth;
+        targetHeight = targetWidth / ASPECT_RATIO;
+        if (targetHeight > availableHeight) {
+          targetHeight = availableHeight;
+          targetWidth = targetHeight * ASPECT_RATIO;
+        }
       }
+
       const canvasElement = document.querySelector("canvas");
       if (canvasElement) {
-        canvasElement.style.width = `${targetWidth}px`;
-        canvasElement.style.height = `${targetHeight}px`;
+        // If custom size is set, we might want to scale it visually to fit the screen
+        // but keep the internal resolution high
+        if (width && height) {
+           p.resizeCanvas(width, height);
+           // Visual scaling could be handled by CSS if needed, 
+           // but for now let's just resize the actual canvas
+           canvasElement.style.width = `${width}px`;
+           canvasElement.style.height = `${height}px`;
+           
+           // Update animations with new height
+           animations.forEach(anim => {
+             if ((anim as any).updateConfig) {
+               (anim as any).updateConfig({ canvasHeight: height });
+             }
+           });
+        } else {
+          canvasElement.style.width = `${targetWidth}px`;
+          canvasElement.style.height = `${targetHeight}px`;
+        }
       }
     }
 
@@ -672,6 +698,8 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           animation.drawToBuffer(buffer, frameIndex)
         );
       },
+      getAnimations: () => animations,
+      resizeCanvas: (width: number, height: number) => resizeCanvas(width, height),
     };
   });
 }

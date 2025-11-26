@@ -29,14 +29,14 @@ export const RESOURCE_CONFIG = {
     {
       id: "sample-image",
       // Use the imported URL
-      path: "public/assets/images/NCG302.jpg",
+      path: "/assets/images/NCG302.jpg",
     },
   ],
   SOUNDS: [
     {
       id: "sample-sound",
       // Use the imported URL
-      path: "public/assets/sounds/wip02-inst.mp3",
+      path: "/assets/sounds/wip02-inst.mp3",
     },
   ],
 };
